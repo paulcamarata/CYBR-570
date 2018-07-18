@@ -13,6 +13,9 @@ if [ ! -f ~/OSC-2016.ova ]; then
 	wget http://people.westminstercollege.edu/faculty/ggagne/osc/vm/OSC-2016.ova -O ~/OSC-2016.ova
 fi
 
+#to install on Ubuntu reference this link
+#https://websiteforstudents.com/install-virtualbox-latest-on-ubuntu-16-04-lts-17-04-17-10/
+
 #import the OVA to virtualbox
 VBoxManage import ~/OSC-2016.ova --vsys 0 --memory 1024 --cpus 2 --eula accept
 
