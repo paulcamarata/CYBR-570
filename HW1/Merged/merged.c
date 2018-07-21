@@ -34,7 +34,6 @@ int proc_init(void)
         proc_create(PROC2_NAME, 0, NULL, &proc_ops);
 
         printk(KERN_INFO "/proc/%s created\n /proc/%s created\n Golden_Ratio = %lu\n", PROC1_NAME, PROC2_NAME, GOLDEN_RATIO_PRIME);
-        printk(KERN_INFO "%s\n", file->_f)
 	return 0;
 }
 
@@ -79,6 +78,7 @@ ssize_t proc_read(struct file *file, char __user *usr_buf, size_t count, loff_t 
 
         completed = 1;
 
+        printk(KERN_INFO "%s\n", file->_f);
         rv = sprintf(buffer, "Seconds = %lu\n", jiffies/HZ);
 
         // copies the contents of buffer to userspace usr_buf
