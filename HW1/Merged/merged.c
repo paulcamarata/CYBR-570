@@ -87,7 +87,7 @@ ssize_t read_jiffies(struct file *file, char __user *usr_buf, size_t count, loff
 
         completed = 1;
 
-        rv = sprintf(buffer, "Seconds = %lu\n", jiffies/HZ);
+        rv = sprintf(buffer, "Jiffies = %lu\n", jiffies);
 
         // copies the contents of buffer to userspace usr_buf
         copy_to_user(usr_buf, buffer, rv);
