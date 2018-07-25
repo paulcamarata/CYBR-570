@@ -1,13 +1,7 @@
 /**
- * hello.c
+ * seconds.c
  *
  * Kernel module that communicates with /proc file system.
- * 
- * The makefile must be modified to compile this program.
- * Change the line "simple.o" to "hello.o"
- *
- * Operating System Concepts - 10th Edition
- * Copyright John Wiley & Sons - 2018
  */
 
 #include <linux/init.h>
@@ -98,6 +92,6 @@ module_init( proc_init );
 module_exit( proc_exit );
 
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Hello Module");
+MODULE_DESCRIPTION("seconds");
 MODULE_AUTHOR("Paul Camarata");
 

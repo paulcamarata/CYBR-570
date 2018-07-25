@@ -12,6 +12,8 @@
 #define PROC2_NAME "seconds"
 #define MESSAGE "Hello World\n"
 
+long unsigned jiffies_var = 0;
+
 /**
  * Function prototypes
  */
@@ -39,6 +41,9 @@ int proc_init(void)
         proc_create(PROC1_NAME, 0, NULL, &proc_ops_jiffies);
         proc_create(PROC2_NAME, 0, NULL, &proc_ops_seconds);
 
+        jiffies_var = jiffies;
+
+        printk(KERN_INFO "Loading Module\n");
         printk(KERN_INFO "/proc/%s created\n", PROC1_NAME);
         printk(KERN_INFO "/proc/%s created\n", PROC2_NAME);
         printk(KERN_INFO "Jiffies = %lu\n", jiffies);
@@ -56,6 +61,7 @@ void proc_exit(void) {
 
         printk( KERN_INFO "/proc/%s removed\n", PROC1_NAME);
         printk( KERN_INFO "/proc/%s removed\n", PROC2_NAME);
+        printk(KERN_INFO "Removing Module\n");
 
 }
 
@@ -98,6 +104,7 @@ ssize_t read_jiffies(struct file *file, char __user *usr_buf, size_t count, loff
 ssize_t read_seconds(struct file *file, char __user *usr_buf, size_t count, loff_t *pos)
 {
         int rv = 0;
+        long unsigned time = 0;
         char buffer[BUFFER_SIZE];
         static int completed = 0;
 
@@ -107,8 +114,8 @@ ssize_t read_seconds(struct file *file, char __user *usr_buf, size_t count, loff
         }
 
         completed = 1;
-
-        rv = sprintf(buffer, "Seconds = %lu\n", jiffies/HZ);
+        time = jiffies/HZ - jiffies_var/HZ;
+        rv = sprintf(buffer, "Seconds = %lu\n", time);
 
         // copies the contents of buffer to userspace usr_buf
         copy_to_user(usr_buf, buffer, rv);
@@ -121,5 +128,5 @@ module_init( proc_init );
 module_exit( proc_exit );
 
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Golden Module");
+MODULE_DESCRIPTION("CYBER-570 Assignment 1");
 MODULE_AUTHOR("Paul Camarata");
