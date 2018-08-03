@@ -63,7 +63,6 @@ Task *pickNextTask()
     int sjf = temp->task->burst;
     Task *chosenTask = temp->task;
 
-
     while (temp != NULL) {
 
         i = i+1;
