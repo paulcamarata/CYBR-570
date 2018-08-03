@@ -32,15 +32,14 @@ void add(char *name, int priority, int burst) {
 /**
  * Run the FCFS scheduler
  */
-void schedule() 
-{
+void schedule() {
+    Task *currentTask = (Task *) malloc(sizeof(Task));
+    currentTask = pickNextTask();
 
-/*
-
-TO BE DONE FOR THE PROJECT
-
-*/
-
+    run(currentTask, currentTask->burst);
+    delete(&head, currentTask);
+    traverse(head);
+    schedule();
 }
 
 /**
@@ -48,11 +47,15 @@ TO BE DONE FOR THE PROJECT
  */
 Task *pickNextTask()
 {
+    struct node *temp;
+    temp = head;
 
-/*
-
-TO BE DONE FOR PROJECT
-
-*/
-
+    while (temp != NULL) {
+        if(temp->next == NULL) {
+            printf("[%s] [%d] [%d]\n",temp->task->name, temp->task->priority, temp->task->burst);
+            return temp->task;
+        }
+        temp = temp->next;
+    }
+    return 0;
 }
