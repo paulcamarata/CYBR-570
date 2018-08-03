@@ -34,10 +34,11 @@ void add(char *name, int priority, int burst) {
  */
 void schedule() {
     if(pickNextTask() == NULL) {
+ //       printf("pickNextTask is Null\n"); //debugging statement
         exit(0);
     }
-    Task *currentTask = (Task *) malloc(sizeof(Task));
-    currentTask = pickNextTask();
+//    printf("pickNextTask is not Null\n"); //debugging statement
+    Task *currentTask = pickNextTask();
 
     run(currentTask, currentTask->burst);
     delete(&head, currentTask);
@@ -49,14 +50,21 @@ void schedule() {
  */
 Task *pickNextTask()
 {
+//    printf("start of pickNextTask\n"); //debugging statement
     struct node *temp;
     temp = head;
-    int sjf = temp->task->burst;
     int i = 0;
-    Task *chosenTask = (Task *) malloc(sizeof(Task));
-    chosenTask = temp->task;
+    if (temp == NULL){
+        printf("No more jobs in the queue\n");
+        exit(0);
+    }
+    int sjf = temp->task->burst;
+    Task *chosenTask = temp->task;
+
+//    printf("before the while\n"); //debugging statement
 
     while (temp != NULL) {
+//        printf("Stepping into while\n"); //debugging statement
         i = i+1;
         if(temp->task->burst < sjf) {
             sjf = temp->task->burst;
@@ -68,6 +76,8 @@ Task *pickNextTask()
         }
         temp = temp->next;
     }
+    printf("Temp == Null\n"); //debugging statement
+    return 0;
 }
 
 // printf("[%s] [%d] [%d]\n",temp->task->name, temp->task->priority, temp->task->burst);
