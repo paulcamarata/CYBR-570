@@ -33,12 +33,12 @@ void add(char *name, int priority, int burst) {
  * Run the FCFS scheduler
  */
 void schedule() {
-    if(pickNextTask() == NULL) {
- //       printf("pickNextTask is Null\n"); //debugging statement
+
+    Task *currentTask = pickNextTask();
+
+    if(currentTask == NULL) {
         exit(0);
     }
-//    printf("pickNextTask is not Null\n"); //debugging statement
-    Task *currentTask = pickNextTask();
 
     run(currentTask, currentTask->burst);
     delete(&head, currentTask);
@@ -50,34 +50,35 @@ void schedule() {
  */
 Task *pickNextTask()
 {
-//    printf("start of pickNextTask\n"); //debugging statement
+
     struct node *temp;
     temp = head;
     int i = 0;
+
     if (temp == NULL){
         printf("No more jobs in the queue\n");
         exit(0);
     }
+
     int sjf = temp->task->burst;
     Task *chosenTask = temp->task;
 
-//    printf("before the while\n"); //debugging statement
 
     while (temp != NULL) {
-//        printf("Stepping into while\n"); //debugging statement
+
         i = i+1;
-        if(temp->task->burst < sjf) {
+
+        if(temp->task->burst <= sjf) {
             sjf = temp->task->burst;
             chosenTask = temp->task;
-//            printf("Current Task = %s\n",chosenTask->name); //debugging statement
         }
+
         if(temp->next == NULL) {
             return chosenTask;
         }
+
         temp = temp->next;
     }
-    printf("Temp == Null\n"); //debugging statement
+
     return 0;
 }
-
-// printf("[%s] [%d] [%d]\n",temp->task->name, temp->task->priority, temp->task->burst);

@@ -33,11 +33,13 @@ void add(char *name, int priority, int burst) {
  * Run the FCFS scheduler
  */
 void schedule() {
-    if(pickNextTask() == NULL) {
+
+    Task *currentTask = pickNextTask();
+
+    if(currentTask == NULL) {
         exit(0);
     }
-    Task *currentTask = (Task *) malloc(sizeof(Task));
-    currentTask = pickNextTask();
+
 
     run(currentTask, currentTask->burst);
     delete(&head, currentTask);
@@ -49,6 +51,7 @@ void schedule() {
  */
 Task *pickNextTask()
 {
+
     struct node *temp;
     temp = head;
 
@@ -56,7 +59,9 @@ Task *pickNextTask()
         if(temp->next == NULL) {
             return temp->task;
         }
+
         temp = temp->next;
     }
+
     return 0;
 }

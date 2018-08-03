@@ -33,7 +33,9 @@ void add(char *name, int priority, int burst) {
  * Run the FCFS scheduler
  */
 void schedule() {
+    
     Task *currentTask = pickNextTask();
+
     if(currentTask == NULL) {
         exit(0);
     }
@@ -58,13 +60,17 @@ Task *pickNextTask()
     struct node *temp;
     temp = head;
 
+    if (temp == NULL){
+        printf("No more jobs in the queue\n");
+        exit(0);
+    }
+    
     while (temp != NULL) {
         if(temp->next == NULL) {
             return temp->task;
         }
         temp = temp->next;
     }
+
     return NULL;
 }
-
-// printf("[%s] [%d] [%d]\n",temp->task->name, temp->task->priority, temp->task->burst);
