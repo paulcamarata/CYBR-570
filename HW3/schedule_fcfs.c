@@ -33,12 +33,14 @@ void add(char *name, int priority, int burst) {
  * Run the FCFS scheduler
  */
 void schedule() {
+    if(pickNextTask() == NULL) {
+        exit(0);
+    }
     Task *currentTask = (Task *) malloc(sizeof(Task));
     currentTask = pickNextTask();
 
     run(currentTask, currentTask->burst);
     delete(&head, currentTask);
-    traverse(head);
     schedule();
 }
 
@@ -52,7 +54,6 @@ Task *pickNextTask()
 
     while (temp != NULL) {
         if(temp->next == NULL) {
-            printf("[%s] [%d] [%d]\n",temp->task->name, temp->task->priority, temp->task->burst);
             return temp->task;
         }
         temp = temp->next;
