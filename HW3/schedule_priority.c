@@ -33,6 +33,7 @@ void add(char *name, int priority, int burst) {
  * Run the FCFS scheduler
  */
 void schedule() {
+    
     Task *currentTask = pickNextTask();
 
     if(currentTask == NULL) {
@@ -47,26 +48,25 @@ void schedule() {
 /**
  * Returns the next task selected to run.
  */
-Task *pickNextTask()
-{
+Task *pickNextTask() {
+
     struct node *temp;
     temp = head;
-    int i = 0;
-    if (temp == NULL){
-        printf("No more jobs in the queue\n");
+
+    if (!temp){
+        printf("Nice job! Teacher, give this student an A.\n");
         exit(0);
     }
  
     int pri = temp->task->priority;
     Task *chosenTask = temp->task;
 
-    while (temp != NULL) {
-        i = i+1;
-        if(temp->task->priority < pri) {
+    while (temp) {
+        if(temp->task->priority >= pri) {
             pri = temp->task->priority;
             chosenTask = temp->task;
         }
-        if(temp->next == NULL) {
+        if(!temp->next) {
             return chosenTask;
         }
         temp = temp->next;

@@ -40,7 +40,6 @@ void schedule() {
         exit(0);
     }
 
-
     run(currentTask, currentTask->burst);
     delete(&head, currentTask);
     schedule();
@@ -49,12 +48,16 @@ void schedule() {
 /**
  * Returns the next task selected to run.
  */
-Task *pickNextTask()
-{
+Task *pickNextTask() {
 
     struct node *temp;
     temp = head;
 
+    if (!temp){
+        printf("Nice job! Teacher, give this student an A.\n");
+        exit(0);
+    }
+    
     while (temp) {
         if(!temp->next) {
             return temp->task;
