@@ -36,7 +36,7 @@ void schedule() {
 
     Task *currentTask = pickNextTask();
 
-    if(currentTask == NULL) {
+    if(!currentTask) {
         exit(0);
     }
 
@@ -55,8 +55,8 @@ Task *pickNextTask()
     struct node *temp;
     temp = head;
 
-    while (temp != NULL) {
-        if(temp->next == NULL) {
+    while (temp) {
+        if(!temp->next) {
             return temp->task;
         }
 
